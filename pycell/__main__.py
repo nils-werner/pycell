@@ -2,6 +2,7 @@ from optparse import OptionParser
 import sys
 import os
 import re
+import itertools
 
 # Python 3 compatibility. Mostly borrowed from SymPy
 PY3 = sys.version_info[0] > 2
@@ -35,6 +36,12 @@ def main():
         help="select cell to run, defaults to the last one",
         default=-1
     )
+    parser.add_option(
+        '-s', '--strip-magics',
+        dest="strip",
+        action="store_true",
+        help="strip IPython magic commands from source",
+    )
 
     if not sys.argv[1:]:
         parser.print_help()
@@ -50,6 +57,9 @@ def main():
         with open(progname, 'rb') as fp:
             codelist = split_cells(fp)[options.cell]
 
+            if options.strip:
+                codelist = strip_magics(codelist)
+
             code = compile("\n".join(codelist), progname, 'exec')
         globs = {
             '__file__': progname,
@@ -60,6 +70,10 @@ def main():
         exec_(code, globs, None)
     else:
         parser.print_usage()
+
+
+def strip_magics(seq):
+    return [l for l in seq if l[0] != '%']
 
 
 def split_cells(seq):

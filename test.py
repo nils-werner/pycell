@@ -18,4 +18,5 @@ print "cell5"
 
 # In[100]:
 
+%matplotlib inline
 print "cell6"
