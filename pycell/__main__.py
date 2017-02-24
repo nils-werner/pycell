@@ -48,8 +48,9 @@ def main():
         sys.path.insert(0, os.path.dirname(progname))
 
         with open(progname, 'rb') as fp:
-            codestr = split_cells(fp.read())[options.cell]
-            code = compile(codestr, progname, 'exec')
+            codelist = split_cells(fp)[options.cell]
+
+            code = compile("\n".join(codelist), progname, 'exec')
         globs = {
             '__file__': progname,
             '__name__': '__main__',
@@ -59,14 +60,18 @@ def main():
         exec_(code, globs, None)
     else:
         parser.print_usage()
-    return parser
 
 
-def split_cells(data):
-    delimiters = [
+def split_cells(seq):
+    delimiters = '|'.join([
         '# %s' % s for s in ['\%\%', '<codecell>', 'In\[ \]:', 'In\[\d+\]:']
+    ])
+
+    return [
+        list(x[1]) for x in
+        itertools.groupby(seq, lambda i: re.match(delimiters, i))
+        if not x[0]
     ]
-    return re.split('|'.join(delimiters), data)
 
 
 if __name__ == '__main__':
